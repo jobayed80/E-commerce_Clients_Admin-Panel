@@ -14,76 +14,77 @@ import Footer from 'components/footer/FooterAuthDefault';
 import FixedPlugin from 'components/fixedPlugin/FixedPlugin';
 
 // /used DRAWER
-import { Drawer, Modal, Button, Image } from 'antd';
+import { Image } from 'antd';
+
 
 
 const Update = () => {
 
-  const { id } = useParams();
-  const navigate = useNavigate()
-  const [productDetails, setProductDetails] = useState([]);
-  const [image, setImage] = useState(null);
+  const navigate = useNavigate();
+  const Swal = require('sweetalert2')
+  const { Id } = useParams();
+  const [product, setProduct] = useState({ Product_Name: '', Price: '', Type: '', image: null });
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null); // State for image preview
+  const [isImageUpdated, setIsImageUpdated] = useState(false);
+  const productTypes = ["Clothing", "Kids Fashion", "Shoes", "Activewear", "Tech Accessories", "Cosmetics"];
+  // search by id with display data
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8081/productDetails/${Id}`);
+        setProduct(response.data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+    fetchProduct();
+  }, [Id]);
 
-  const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProduct({ ...product, [name]: value });
   };
-  console.log("jon"+image)
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+    setIsImageUpdated(true);
+    setPreview(URL.createObjectURL(selectedFile)); // Set preview to show selected image
 
-  useEffect(() => {
-    axios.get("http://localhost:8081/productDetails/" + id)
-      .then(res => {
-        // console.log(res)
-        setProductDetails(res.data[0]);
-      })
-      .catch(err => console.log(err))
-  }, []);
+  };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  useEffect(() => {
-    // setOpen(true)
-    axios.get("http://localhost:8081/productDetails/" + id)
-      .then(res => {
+    const formData = new FormData();
+    formData.append('Product_Name', product.Product_Name);
+    formData.append('Price', product.Price);
+    formData.append('Type', product.Type);
+    formData.append('isImageUpdated', isImageUpdated); // Add flag to formData
+    // Only add the image if isImageUpdated is true
+    if (isImageUpdated && file) {
+      formData.append('image', file);
+    }
 
-        setValues({ ...values, Product_Name: res.data[0].Product_Name, Price: res.data[0].Price, Type: res.data[0].Type });
-      })
-      .catch(err => console.log(err))
-  }, []);
+    try {
+      await axios.put(`http://localhost:8081/productUpdate/${Id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Updated product",
+        showConfirmButton: false,
+        timer: 1500
+      });
+      navigate('/admin/medicine');
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
+  };
 
-  const [values, setValues] = useState({
-    // Id: "",
-    Product_Name: "",
-    Price: "",
-    Type: "",
-
-  })
-
-
-
-  // update
-  const handleUpdate = (e) => {
-    // e.preventDefault();
-    // axios.put("http://localhost:8081/product/update/" + id, values)
-    //   .then(res => {
-    //     console.log("edit" + res)
-    //     // navigate('/admin/nft-marketplace')
-    //     const Toast = Swal.mixin({
-    //       toast: true,
-    //       position: "top-end",
-    //       showConfirmButton: false,
-    //       timer: 3000,
-    //       timerProgressBar: true,
-    //       didOpen: (toast) => {
-    //         toast.onmouseenter = Swal.stopTimer;
-    //         toast.onmouseleave = Swal.resumeTimer;
-    //       }
-    //     });
-    //     Toast.fire({
-    //       icon: "success",
-    //       title: "Updated medicine data"
-    //     });
-    //   })
-      console.log(values)
-  }
 
   return (
 
@@ -110,6 +111,66 @@ const Update = () => {
 
         <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-12">
           <div className=" flex flex-col items-center">
+
+
+            {/* <div>
+              <h2>Update Product</h2>
+              <form onSubmit={handleSubmit}>
+                <div>
+                  <label>Product Name</label>
+                  <input
+                    type="text"
+                    name="Product_Name"
+                    value={product.Product_Name}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label>Price</label>
+                  <input
+                    type="number"
+                    name="Price"
+                    value={product.Price}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label>Type</label>
+                  <select
+
+                    name="Type"
+                    value={product.Type}
+                    onChange={handleInputChange}>
+                    <option value="">Select a type</option>
+                    {productTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+
+                </div>
+
+                <div>
+                  <label>Image</label>
+                  {product.image && (
+                    <img
+                      src={`data:image/jpeg;base64,${product.image}`}
+                      alt={product.Product_Name}
+                      width="150"
+                    />
+                  )}
+                  <input type="file" onChange={handleFileChange} />
+                </div>
+                <button type="submit">Update</button>
+              </form>
+            </div> */}
+
+
+
+
+
+
             <div className="text-center">
               <h1 className="text-2xl xl:text-4xl font-extrabold text-blue-900">
                 Product Modified
@@ -121,16 +182,14 @@ const Update = () => {
 
 
 
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div class="space-y-5">
 
                   <div class="border-b border-gray-900/10 pb-0">
-                    {/* <h2 class="text-base font-semibold leading-7 text-gray-900">Personal Information</h2>
-                  <p class="mt-1 text-sm leading-6 text-gray-600">Use a permanent address where you can receive mail.</p> */}
                     <div class="sm:col-span-3 grid grid-col-1">
                       <label for="first-name" class="block text-sm font-medium leading-6 text-gray-900">Product ID</label>
                       <div class="mt-2">
-                        <input type="text" name="first-name" id="first-name" autocomplete="given-name" class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" value={id} readonly></input>
+                        <input type="text" name="Id" id="Id" autocomplete="given-name" class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" value={product.Id} readonly></input>
                       </div>
                     </div>
 
@@ -140,14 +199,25 @@ const Update = () => {
                       <div class="sm:col-span-3">
                         <label for="first-name" class="block text-sm font-medium leading-6 text-gray-900">Product Name</label>
                         <div class="mt-2">
-                          <input type="text" name="first-name" id="first-name" autocomplete="given-name" class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" value={values.Type} ></input>
+                          <input type="text" name="Product_Name" id="Product_Name" autocomplete="given-name" class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" onChange={handleInputChange} value={product.Product_Name} ></input>
                         </div>
                       </div>
 
                       <div class="sm:col-span-3">
                         <label for="last-name" class="block text-sm font-medium leading-6 text-gray-900">Product Brand</label>
                         <div class="mt-2">
-                          <input type="text" name="last-name" id="last-name" autocomplete="family-name" class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" onChange={e => setValues({ ...values, Product_Name: e.target.value })} value={values.Product_Name}></input>
+                          <select class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            name="Type"
+                            value={product.Type}
+                            onChange={handleInputChange}
+                          >
+                            <option value="">Select a type</option>
+                            {productTypes.map((type) => (
+                              <option key={type} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </div>
 
@@ -155,29 +225,73 @@ const Update = () => {
 
                     </div>
                   </div>
+
                   <div class="sm:col-span-3">
                     <label for="first-name" class="block text-sm font-medium leading-6 text-gray-900">Product Price</label>
                     <div class="mt-2">
-                      <input type="text" name="first-name" id="first-name" autocomplete="given-name" class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" onChange={e => setValues({ ...values, Price: e.target.value })} value={values.Price}></input>
+                      <input type="text" name="Price" id="Price" autocomplete="given-name" class="pl-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" onChange={handleInputChange} value={product.Price}></input>
                     </div>
                   </div>
 
 
                 </div>
-                <div class="mt-2 flex gap-5 items-center justify-center rounded-full w-50 h-50">
-                  <div className='rounded-full border-2'>
-                    <Image
+                <div >
+                  <div >
+                    {/* {product.image && (
+                      <Image
+                        width={100}
+                        height={100}
+                        src={`data:${product.mimeType};base64,${product.image}`}
+                      />
+                    )} */}
+                    {/* {preview && (
+                      <img
+                        src={preview}
+                        alt={product.Product_Name}
+                        width="150"
+                        style={{ display: 'block', marginBottom: '10px' }}
+                      />
+                    ) || (<Image
                       width={100}
                       height={100}
-                      src={image ? image : `http://localhost:8081/${productDetails.imagePath}`}
-                    />
+                      src={`data:${product.mimeType};base64,${product.image}`}
+                    />) }  */}
+                    <div style={{ display: "flex", alignItems: "center" }} class="mb-4 mt-5 gap-5">
+                      
+                      {
+                          preview && (
+                            <div class="h-[140px] w-[140px] rounded-lg">
+                              <Image
+                                src={preview}
+                                alt={product.Product_Name}
+                                width="150"
+                              />
+                            </div>
+                            
+                          ) || 
+                          (
+                            <div class="h-[140px] w-[140px] rounded-lg">
+                              <Image
+                                src={`data:${product.mimeType};base64,${product.image}`}
+                              />
+                            </div>
+                          )
+                      }
+                      <input
+                        class="relative m-0 block w-full min-w-0 flex-auto cursor-pointer rounded border border-solid border-secondary-500 bg-transparent bg-clip-padding px-3 py-[0.32rem] text-xs font-normal text-surface transition duration-300 ease-in-out file:-mx-3 file:-my-[0.32rem] file:me-3 file:cursor-pointer file:overflow-hidden file:rounded-none file:border-0 file:border-e file:border-solid file:border-inherit file:bg-transparent file:px-3  file:py-[0.32rem] file:text-surface focus:border-primary focus:text-gray-700 focus:shadow-inset focus:outline-none dark:border-white/70 dark:text-white  file:dark:text-white"
+                        id="formFileSm"
+                        type="file"
+                        onChange={handleFileChange} />
+                    </div>
+
+
                   </div>
                 </div>
 
 
                 <div class="mt-6 flex items-center justify-end gap-x-6">
                   <Link to="/admin/medicine" type="button" class="text-sm font-semibold leading-6 text-gray-900">Cancel</Link>
-                  <button onClick={handleUpdate}   class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Save</button>
+                  <button class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Save</button>
                 </div>
 
 
@@ -197,6 +311,8 @@ const Update = () => {
 
           </div>
         </div>
+
+        
 
       </div>
     </div>

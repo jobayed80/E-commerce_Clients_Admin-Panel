@@ -258,10 +258,7 @@ const SigninAuth = () => {
 
 
                             <Tabs isFitted variant='enclosed'  colorScheme='green'>
-                                <TabList className='flex flex-row gap-10 bg-gray-100 justify-center items-center py-3 text-md rounded-2xl'>
-                                    <Tab>User</Tab>
-                                    <Tab>Admin</Tab>
-                                </TabList>
+                                
                                 <TabPanels>
                                     <TabPanel>
                                         <div class="max-w-sm mx-auto mt-6">
@@ -311,54 +308,7 @@ const SigninAuth = () => {
 
                                         </div>
                                     </TabPanel>
-                                    <TabPanel>
-                                        <div class="max-w-sm mx-auto mt-6">
-                                            <div class="mb-5">
-                                                <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
-                                                <input type="email" id="email" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-white dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="admin@gmail.com" required
-                                                    value={emailAdmin} onChange={(e) => setEmailAdmin(e.target.value)}></input>
-                                            </div>
-                                            <div class="mb-5">
-                                                <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your password</label>
-                                                <input type="password" id="password" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 " placeholder="**********" required
-                                                    value={passAdmin} onChange={(e) => setPassAdmin(e.target.value)}></input>
-                                            </div>
-                                            <div class="flex items-start mb-5">
-                                                <div class="flex items-center h-5">
-                                                    <input id="remember" type="checkbox" value="" class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800" placeholder="**********"  required></input>
-                                                </div>
-                                                <label for="remember" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Remember me</label>
-                                            </div>
-                                            <button
-                                                onClick={handleSubmitEmailPassAdmin}
-
-                                                class="mt-5 mb-1 tracking-wide font-semibold bg-green-400 text-white-500 w-full py-4 rounded-lg hover:bg-green-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none">
-                                                <svg class="w-6 h-6 -ml-2" fill="none" stroke="currentColor" stroke-width="2"
-                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                                                    <circle cx="8.5" cy="7" r="4" />
-                                                    <path d="M20 8v6M23 11h-6" />
-                                                </svg>
-                                                <span class="ml-">
-                                                    Sign In Admin
-                                                </span>
-                                            </button>
-
-                                            <span className='text-sm text-gray-700'>Don't have an account? <Link to={`/admin/authentication/signupAuth`}>SignUp</Link></span>
-                                            <p class="mt-6 text-xs text-gray-600 text-center">
-                                                I agree to abide by Cartesian Kinetics
-                                                <a href="#" class="border-b border-gray-500 border-dotted">
-                                                    Terms of Service
-                                                </a>
-                                                and its
-                                                <a href="#" class="border-b border-gray-500 border-dotted">
-                                                    Privacy Policy
-                                                </a>
-                                            </p>
-
-
-                                        </div>
-                                    </TabPanel>
+                                    
                                 </TabPanels>
                             </Tabs>                  
                            

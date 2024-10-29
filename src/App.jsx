@@ -1,4 +1,4 @@
-import React from "react";
+import React , {useState} from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import RtlLayout from "layouts/rtl";
@@ -14,6 +14,7 @@ import SignUpAuth from "views/Authentication/SignUpAuth";
 // import Dashboard from 'views/AdminDashboard/' joba
 
 const App = () => {
+
   return (
     <Routes>
       <Route path="auth/*" element={<AuthLayout />} />
@@ -21,8 +22,8 @@ const App = () => {
       
       <Route path="admin/authentication/signinAuth" element={<SigninAuth />} />
       <Route path="admin/authentication/signupAuth" element={<SignUpAuth />} />
-      <Route path="user/medicine/read/:id" element={<Read />} />
-      <Route path="user/medicine/update/:id" element={<Update />} />
+      <Route path="user/medicine/read/:Id" element={<Read  />} />
+      <Route path="user/medicine/update/:Id" element={<Update />} />
       <Route path="user/prescription/read/:id" element={<Read_Prescription />} />
       <Route path="user/prescription/update/:id" element={<Update_Prescription />} />
 

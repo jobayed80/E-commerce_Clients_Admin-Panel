@@ -37,18 +37,20 @@ import src from "tailwindcss-rtl";
 const Read = () => {
  
 
-  const { id } = useParams();
+  const { Id } = useParams();
   const [productDetails, setProductDetails] = useState([]);
-
+  
   useEffect(() => {
-
-    axios.get("http://localhost:8081/productDetails/" + id)
-      .then(res => {
-        // console.log(res)
-        setProductDetails(res.data[0]);
-      })
-      .catch(err => console.log(err))
-  }, []);
+    const fetchProduct  = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8081/productDetails/${Id}`);
+        setProductDetails(response.data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+    fetchProduct ();
+  }, [Id]);
 
 
 
@@ -137,8 +139,7 @@ const Read = () => {
                 <Image
                     width={100}
                     height={100}
-                  
-                    src={`http://localhost:8081/${productDetails.imagePath}`}
+                    src={`data:${productDetails.mimeType};base64,${productDetails.image}`}
                   />
                   </div>
                 

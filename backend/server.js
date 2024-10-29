@@ -2,6 +2,7 @@ const express = require("express")
 const mysql = require('mysql')
 const cors = require('cors')
 const bodyParser = require('body-parser');
+const multer = require('multer');
 
 
 const app = express()
@@ -10,10 +11,8 @@ app.use(bodyParser.json({ limit: '10mb' })); // Increase limit for large images
 // app.use(express.json())
 
 
-// used for images
-const multer = require('multer');
-const path = require('path'); 
-
+// Configure multer for file uploads for update products
+const upload = multer();
 
 
 //create db
@@ -35,30 +34,6 @@ db.connect(err => {
 
 
 
-// used for image add in database
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './uploads');
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  },
-});
-// img filter
-const isImage = (req, file, callback) => {
-  if (file.mimetype.startsWith("image")) {
-    callback(null, true)
-  } else {
-    callback(null, Error("only image is allowd"))
-  }
-}
-
-const upload = multer({
-  storage: storage,
-  fileFilter: isImage
-});
-
-app.use("/uploads", express.static("./uploads"))
 
 
 
@@ -138,38 +113,45 @@ app.delete('/deleteAll_Product_Data', (req, res) => {
 
 
 // individual details display for product
-app.get("/productDetails/:id", (req, res) => {
-  const id = req.params.id;
-  db.query("SELECT * FROM shop WHERE Id = ?", id, (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
-      res.send(result);
-    }
+app.get("/productDetails/:Id", (req, res) => {
+  const  {Id}  = req.params;
+  db.query('SELECT * FROM shop WHERE Id = ?', [Id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (result.length === 0) return res.status(404).json({ error: 'User not found' });
+
+    const user = result[0];
+    const base64Image = user.image.toString('base64'); // Convert buffer to Base64
+    res.json({ ...user, image: base64Image });
   });
 });
 
-//Update the Records medicine
-app.put("/product/update/:id", (req, res) => {
-  let sql =
-    "UPDATE shop SET Product_Name='" +
-    req.body.Product_Name +
-    "', Price='" +
-    req.body.Price +
-    "',Type='" +
-    req.body.Type +
 
-    "'  WHERE id=" +
-    req.params.id;
 
-  let a = db.query(sql, (error, result) => {
-    if (error) {
-      res.send({ status: false, message: "Student Updated Failed" });
-    } else {
-      res.send({ status: true, message: "Student Updated successfully" });
-    }
+// Route to update a product by ID
+
+app.put('/productUpdate/:Id', upload.single('image'), (req, res) => {
+  const { Id } = req.params;
+  const { Product_Name, Price, Type, isImageUpdated  } = req.body;
+  // const image = req.file ? req.file.buffer : null;
+  // const query = 'UPDATE shop SET Product_Name = ?, Price = ?, Type = ?, image = ? WHERE Id = ?';
+  // const values = [Product_Name, Price, Type, image, Id]
+   // If `isImageUpdated` is true and an image is provided, include it in the update
+
+  //  ekhane mane holo jodi image updat korte cai tahole
+   const query = isImageUpdated === 'true' && req.file
+   ? 'UPDATE shop SET Product_Name = ?, Price = ?, Type = ?, image = ? WHERE Id = ?'
+   : 'UPDATE shop SET Product_Name = ?, Price = ?, Type = ? WHERE Id = ?';
+
+   const values = isImageUpdated === 'true' && req.file
+   ? [Product_Name, Price, Type, req.file.buffer, Id]
+   : [Product_Name, Price, Type, Id];
+
+  db.query(query, values, (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Product updated successfully' });
   });
 });
+
 
 
 
@@ -188,53 +170,6 @@ app.get('/api/products/count/:name', (req, res) => {
       res.json({ count: results[0].count });
   });
 });
-
-
-app.get('/api/count/:productShoes', (req, res) => {
-  const productShoes = req.params.productShoes;
-  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
-  db.query(query, [[productShoes]], (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-    res.json({ totalCount: results[0].totalCount });
-  });
-});
-
-app.get('/api/count/:productJacket', (req, res) => {
-  const productJacket = req.params.productJacket;
-  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
-  db.query(query, [[productJacket]], (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-    res.json({ totalCount: results[0].totalCount });
-  });
-});
-app.get('/api/count/:productHeadphone', (req, res) => {
-  const productHeadphone = req.params.productHeadphone;
-  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
-  db.query(query, [[productHeadphone]], (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-    res.json({ totalCount: results[0].totalCount });
-  });
-});
-app.get('/api/count/:productBlazers', (req, res) => {
-  const productBlazers = req.params.productBlazers;
-  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
-  db.query(query, [[productBlazers]], (err, results) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-    res.json({ totalCount: results[0].totalCount });
-  });
-});
-
-
-
-
 
 
 
