@@ -102,6 +102,13 @@ export const barChartOptionsDailyTraffic = {
   },
 };
 
+
+
+
+
+
+
+
 export const pieChartOptions = {
   labels: ["Your files", "System", "Empty"],
   colors: ["#4318FF", "#6AD2FF", "#EFF4FB"],
@@ -146,7 +153,10 @@ export const pieChartOptions = {
   },
 };
 
-export const pieChartData = [63, 25, 12];
+
+export const pieChartData = [80, 25, 12];
+
+
 
 export const barChartDataWeeklyRevenue = [
   {

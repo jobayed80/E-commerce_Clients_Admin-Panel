@@ -5,7 +5,6 @@ import MainDashboard from "views/admin/default";
 import NFTMarketplace from "views/admin/marketplace";
 import Profile from "views/admin/profile";
 import DataTables from "views/admin/tables";
-import RTLDefault from "views/rtl/default";
 import Prescribtion from "views/Prescription";
 
 // Auth Imports

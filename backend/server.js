@@ -1,70 +1,41 @@
 const express = require("express")
 const mysql = require('mysql')
 const cors = require('cors')
+const bodyParser = require('body-parser');
 
-// used for images
-const moment = require("moment")
-const multer = require('multer');
-const path = require('path');
 
 const app = express()
 app.use(cors())
-app.use(express.json())
+app.use(bodyParser.json({ limit: '10mb' })); // Increase limit for large images
+// app.use(express.json())
 
+
+// used for images
+const multer = require('multer');
+const path = require('path'); 
 
 
 
 //create db
 const db = mysql.createConnection({
-    host : "localhost",
-    user: "root",
-    password: "",
-    database: "medicine_reminder"
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "fashion-ecommerce"
 
 })
 
 db.connect(err => {
-    if (err) {
-      console.error('Error connecting to MySQL:', err);
-      return;
-    }
-    console.log('Connected to MySQL');
-  });
-
-
-app.get('/', (req,res)=>{
-    return res.json("From Backend Jobayed")
-})
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL');
+});
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// used for user profile image
+// used for image add in database
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, './uploads');
@@ -74,117 +45,54 @@ const storage = multer.diskStorage({
   },
 });
 // img filter
-const isImage = (req,file,callback)=>{
-  if(file.mimetype.startsWith("image")){
-      callback(null,true)
-  }else{
-      callback(null,Error("only image is allowd"))
+const isImage = (req, file, callback) => {
+  if (file.mimetype.startsWith("image")) {
+    callback(null, true)
+  } else {
+    callback(null, Error("only image is allowd"))
   }
 }
 
-
-
-const upload = multer({  
-  storage:storage,
-  fileFilter:isImage
+const upload = multer({
+  storage: storage,
+  fileFilter: isImage
 });
 
-app.use("/uploads",express.static("./uploads"))
+app.use("/uploads", express.static("./uploads"))
 
-app.post('/upload', upload.single('image'), (req, res) => {
-  const {
-    First_Name,
-    Last_Name,
-    Address,
-    Contact,
-    Description,
-    Date,
-    Country,
-    Gender,
-  } = req.body;
 
-  const imagePath = req.file.path;
 
-  
-  // Insert data into MySQL
-  const sql =
-    'INSERT INTO user_profile (First_Name, Last_Name, Address, Contact, Description, Date, Country, Gender, imagePath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    
-  db.query(sql, [First_Name, Last_Name, Address, Contact, Description, Date, Country, Gender,  imagePath], (err, result) => {
-    if (err) {
-      console.error('Error inserting data: ' + err.stack);
-      res.status(500).send('Internal Server Error');
-    } else {
-      console.log('Data inserted successfully');
-      res.status(200).send('Data inserted successfully');
-    }
+
+
+// Route to insert product information
+app.post('/Product_insert', (req, res) => {
+  const { Product_Name, Type, Price, image, mimeType } = req.body; // Get product data and image
+  const sql = 'INSERT INTO shop (Product_Name, Type, Price, image, mimeType) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [Product_Name, Type, Price, Buffer.from(image, 'base64'), mimeType], (err, result) => {
+      if (err) throw err;
+      res.json({ message: 'Product uploaded!', id: result.insertId });
+  });
+});
+
+// Route to fetch products display
+app.get('/productsDis', (req, res) => {
+  db.query('SELECT * FROM shop ORDER BY Id DESC', (err, results) => {
+      if (err) throw err;
+      res.json(results.map(row => ({
+          Id: row.Id,
+          Product_Name: row.Product_Name,
+          Type: row.Type,
+          Price: row.Price,
+          image: Buffer.from(row.image).toString('base64'),
+          mimeType: row.mimeType
+      })));
   });
 });
 
 
-app.get('/getDataById/:id', (req, res) => {
-  const userId = req.params.id;
-  const sql = 'SELECT * FROM user_profile WHERE Id = ?';
-  db.query(sql, [userId], (err, result) => {
-    if (err) {
-      console.error('Error fetching data: ' + err.stack);
-      res.status(500).send('Internal Server Error');
-    } else {
-      res.status(200).json(result[0]);
-    }
-  });
-});
-
-// last profile picture collect
-app.get('/latestDataProfile', (req, res) => {
-  const query = 'SELECT * FROM user_profile ORDER BY Id DESC LIMIT 1';
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Internal Server Error');
-    } else {
-      res.json(results);
-    }
-  });
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// user_profile id generated
-app.get('/getProfileId', (req, res) => {
-  const query = 'SELECT MAX(Id) AS max_id FROM user_profile';
+// product id generated
+app.get('/getProductId', (req, res) => {
+  const query = 'SELECT MAX(Id) AS max_id FROM shop';
 
   db.query(query, (error, results) => {
     if (error) {
@@ -198,148 +106,58 @@ app.get('/getProfileId', (req, res) => {
   });
 });
 
-
-
-
-// medicine create  
-app.post('/create_medicine', upload.single('image'),  (req,res)=>{
-
-  const {
-    name,
-    company,
-    expire_date,
-    dosage,
-    introduction,
-  } = req.body;
-
-  const imagePath = req.file.path;
-
-  
-  // Insert data into MySQL
-  const sql =
-    'INSERT INTO medicine (name, company, expire_date, dosage, introduction, imagePath) VALUES (?, ?, ?, ?, ?, ?)';
-    
-  db.query(sql, [name, company, expire_date, dosage, introduction , imagePath], (err, result) => {
-    if (err) {
-      console.error('Error inserting data: ' + err.stack);
-      res.status(500).send('Internal Server Error');
-    } else {
-      console.log('Data inserted successfully');
-      res.status(200).send('Data inserted successfully');
-    }
-  });
-})
-
-
-// last 3 data display for medicine
-app.get('/latestDataMedicine', (req, res) => {
-  const query = 'SELECT * FROM medicine ORDER BY Id DESC LIMIT 3';
-
+app.get('/data', (req, res) => {
+  const query = 'SELECT * FROM shop ORDER BY id DESC';
   db.query(query, (err, results) => {
+    if (err) throw err;
+    res.json(results);
+  });
+});
+
+//Delete the Records by id
+app.delete("/delete_product/:id", (req, res) => {
+  let sql = "DELETE FROM shop WHERE Id= ?";
+  const id = req.params.id
+  db.query(sql, [id], (err, result) => {
+    if (err) return res.json({ Message: "Student Deleted Failed" });
+    return res.json(result)
+
+  });
+});
+
+//   delete all data for medicine
+app.delete('/deleteAll_Product_Data', (req, res) => {
+  const query = 'DELETE FROM shop';
+
+  db.query(query, (error, results, fields) => {
+    if (error) throw error;
+
+    res.json({ success: true, message: 'All data deleted successfully.' });
+  });
+});
+
+
+// individual details display for product
+app.get("/productDetails/:id", (req, res) => {
+  const id = req.params.id;
+  db.query("SELECT * FROM shop WHERE Id = ?", id, (err, result) => {
     if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Internal Server Error');
+      console.log(err);
     } else {
-      res.json(results);
+      res.send(result);
     }
   });
 });
-
-
-
-
-
-
-// User_Profile create  
-// app.post('/create_profile', (req,res)=>{
-//     const sql = 'INSERT INTO user_profile ( `First_Name`, `Last_Name`, `Address`, `Contact` ,  `Description`, `Date`, `Country`, `Gender`) VALUES (?)';
-//     const values = [
-//         // req.body.Id,
-//         req.body.First_Name,
-//         req.body.Last_Name,
-//         req.body.Address,
-//         req.body.Contact,
-//         req.body.Description,
-//         req.body.Date,
-//         req.body.Country,
-//         req.body.Gender,
-        
-//     ]
-//     db.query(sql,[values],  (err,data)=>{
-//         if(err) return res.json(err)
-//         return res.json(data)
-//     }) 
-// })
-
-
-
-
-
-
-
-// medicine id generated
-app.get('/getMedicineId', (req, res) => {
-  const query = 'SELECT MAX(Id) AS max_id FROM medicine';
-
-  db.query(query, (error, results) => {
-    if (error) {
-      console.error('Error executing query:', error);
-      res.status(500).send('Internal Server Error');
-      return;
-    }
-
-    const maxId = results[0].max_id;
-    res.json({ max_id: maxId });
-  });
-});
-
-
-
-
-
-  // API endpoint to fetch data from MySQL
-app.get('/medicine_data', (req, res) => {
-    const query = 'SELECT * FROM medicine';
-    db.query(query, (err, result) => {
-      if (err) {
-        console.error('MySQL query error:', err);
-        res.status(500).send('Error fetching data from MySQL');
-      } else {
-        res.json(result);
-      }
-    });
-  });
-
-
-    // individual details display for medicine
-    app.get("/medicinedetails/:id", (req, res) => {
-      const id = req.params.id;
-      db.query("SELECT * FROM medicine WHERE id = ?", id, (err, result) => {
-        if (err) {
-          console.log(err);
-        } else {
-          res.send(result);
-        }
-      });
-    });
-
-
-
 
 //Update the Records medicine
-app.put("/medicine/update/:id", (req, res) => {
+app.put("/product/update/:id", (req, res) => {
   let sql =
-    "UPDATE medicine SET name='" +
-    req.body.name +
-    "', company='" +
-    req.body.company +
-    "',expire_date='" +
-    req.body.expire_date +
-    "', dosage='" +
-    req.body.dosage +
-
-    "', introduction='" +
-    req.body.introduction +
+    "UPDATE shop SET Product_Name='" +
+    req.body.Product_Name +
+    "', Price='" +
+    req.body.Price +
+    "',Type='" +
+    req.body.Type +
 
     "'  WHERE id=" +
     req.params.id;
@@ -353,219 +171,120 @@ app.put("/medicine/update/:id", (req, res) => {
   });
 });
 
-  //Delete the Records by id
-  app.delete("/delete_medicine/:id", (req, res) => {
-    let sql = "DELETE FROM medicine WHERE Id= ?";
-    const id = req.params.id
-    db.query(sql, [id], (err, result) => {
-      if (err) return res.json({ Message:"Student Deleted Failed" });
-        return res.json(result)
-      
-    });
+
+
+
+
+
+
+
+// Route to get the count of a specific product
+app.get('/api/products/count/:name', (req, res) => {
+  const ProductName = req.params.name;
+  const query = 'SELECT COUNT(*) AS count FROM shop WHERE Type = ?';
+
+  db.query(query, [ProductName], (err, results) => {
+      if (err) return res.status(500).json(err);
+      res.json({ count: results[0].count });
   });
-
-//   delete all data for medicine
-app.delete('/deleteAllData', (req, res) => {
-    const query = 'DELETE FROM medicine';
-  
-    db.query(query, (error, results, fields) => {
-      if (error) throw error;
-  
-      res.json({ success: true, message: 'All data deleted successfully.' });
-    });
-  });
+});
 
 
-
-
-
-
-
-  // prescription id generated
-  app.get('/getPrescriptionId', (req, res) => {
-    const query = 'SELECT MAX(Id) AS max_id FROM prescription';
-  
-    db.query(query, (error, results) => {
-      if (error) {
-        console.error('Error executing query:', error);
-        res.status(500).send('Internal Server Error');
-        return;
-      }
-  
-      const maxId = results[0].max_id;
-      res.json({ max_id: maxId });
-    });
-  });
-
-
-  // medicine create  
-app.post('/create_prescription', upload.single('image'),  (req,res)=>{
-
-  const {
-    medical_name,
-    doctor_name,
-    doctor_notes,
-  } = req.body;
-
-  const imagePath = req.file.path;
-
-  
-  // Insert data prescription
-  const sql =
-    'INSERT INTO prescription (medical_name, doctor_name, doctor_notes, imagePath) VALUES (?, ?, ?, ?)';
-    
-  db.query(sql, [medical_name, doctor_name, doctor_notes, imagePath], (err, result) => {
+app.get('/api/count/:productShoes', (req, res) => {
+  const productShoes = req.params.productShoes;
+  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
+  db.query(query, [[productShoes]], (err, results) => {
     if (err) {
-      console.error('Error inserting data: ' + err.stack);
-      res.status(500).send('Internal Server Error');
-    } else {
-      console.log('Data inserted successfully');
-      res.status(200).send('Data inserted successfully');
+      return res.status(500).send(err);
     }
+    res.json({ totalCount: results[0].totalCount });
   });
+});
+
+app.get('/api/count/:productJacket', (req, res) => {
+  const productJacket = req.params.productJacket;
+  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
+  db.query(query, [[productJacket]], (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json({ totalCount: results[0].totalCount });
+  });
+});
+app.get('/api/count/:productHeadphone', (req, res) => {
+  const productHeadphone = req.params.productHeadphone;
+  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
+  db.query(query, [[productHeadphone]], (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json({ totalCount: results[0].totalCount });
+  });
+});
+app.get('/api/count/:productBlazers', (req, res) => {
+  const productBlazers = req.params.productBlazers;
+  const query = 'SELECT COUNT(*) AS totalCount FROM shop WHERE Type = ?';
+  db.query(query, [[productBlazers]], (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.json({ totalCount: results[0].totalCount });
+  });
+});
+
+
+
+
+
+
+
+
+
+// Route to fetch products with optional search by product type individual
+app.get('/SearchProduct_Type', (req, res) => {
+  const { type } = req.query;
+  let sql = 'SELECT * FROM shop ';
+  let params = [];
+
+  // If a type is provided, modify the SQL query to include a WHERE clause
+  if (type) {
+      sql += ' WHERE Type = ?';
+      params.push(type);
+  }
+  // Add ORDER BY clause to sort in descending order by id (or any other column)
+  sql += ' ORDER BY Id DESC';
+
+
+  db.query(sql, params, (err, results) => {
+      if (err) {
+          console.error('Error fetching products:', err);
+          return res.status(500).json({ message: 'Failed to fetch products' });
+      }
+      // Convert image buffer to base64 for each product
+      res.json(results.map(row => ({
+          id: row.Id,
+          Product_Name: row.Product_Name,
+          Type: row.Type,
+          Price: row.Price,
+          image: Buffer.from(row.image).toString('base64'),
+          mimeType: row.mimeType
+      })));
+  });
+});
+
+
+
+
+
+
+
+
+
+
+app.get('/', (req, res) => {
+  return res.json("From Backend Jobayed hossain")
 })
 
-
- // individual details display for medicine
- app.get("/prescriptiondetails/:id", (req, res) => {
-  const id = req.params.id;
-  db.query("SELECT * FROM prescription WHERE Id = ?", id, (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
-      res.send(result);
-    }
-  });
-});
-
-//Update the Records prescription
-app.put("/prescription/update/:id", (req, res) => {
-  let sql =
-    "UPDATE prescription SET medical_name='" +
-    req.body.medical_name +
-    "', doctor_name='" +
-    req.body.doctor_name +
-    "',doctor_notes='" +
-    req.body.doctor_notes +
-
-    "'  WHERE Id=" +
-    req.params.id;
-
-  let a = db.query(sql, (error, result) => {
-    if (error) {
-      res.send({ status: false, message: "Student Updated Failed" });
-    } else {
-      res.send({ status: true, message: "Student Updated successfully" });
-    }
-  });
-});
-
-
-// last 3 data display
-app.get('/latestDataPrescription', (req, res) => {
-  const query = 'SELECT * FROM prescription ORDER BY Id DESC LIMIT 3';
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Internal Server Error');
-    } else {
-      res.json(results);
-    }
-  });
-});
-
-
-
-// view all data
-app.get('/prescription_data', (req, res) => {
-  const query = 'SELECT * FROM prescription';
-  db.query(query, (err, result) => {
-    if (err) {
-      console.error('MySQL query error:', err);
-      res.status(500).send('Error fetching data from MySQL');
-    } else {
-      res.json(result);
-    }
-  });
-});
-
-
-//Delete the Records by id
-app.delete("/delete_prescription/:id", (req, res) => {
-  let sql = "DELETE FROM prescription WHERE Id= ?";
-  const id = req.params.id
-  db.query(sql, [id], (err, result) => {
-    if (err) return res.json({ Message:"Student Deleted Failed" });
-      return res.json(result)
-    
-  });
-});
-
-// delete all data for medicine
-app.delete('/deleteAllDataPrescription', (req, res) => {
-  const query = 'DELETE FROM prescription';
-
-  db.query(query, (error, results, fields) => {
-    if (error) throw error;
-
-    res.json({ success: true, message: 'All data deleted successfully.' });
-  });
-});
-
-
-
-
-
-
-// total medicine id
-app.get('/countMedicine', (req, res) => {
-  db.query('SELECT COUNT(*) AS totalCount FROM medicine', (error, results) => {
-    if (error) throw error;
-    res.json({ count: results[0].totalCount });
-  });
-});
-
-// total prescription id
-app.get('/countPrescription', (req, res) => {
-  db.query('SELECT COUNT(*) AS totalCount FROM prescription', (error, results) => {
-    if (error) throw error;
-    res.json({ count: results[0].totalCount });
-  });
-});
-
-
-// lattest last 5 data row for medicine
-app.get('/lastdataMedicine', (req, res) => {
-  const query = 'SELECT * FROM medicine ORDER BY Id DESC LIMIT 5';
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Internal Server Error');
-    } else {
-      res.json(results);
-    }
-  });
-});
-
-// lattest last 5 data row for prescription
-app.get('/lastdataPrescription', (req, res) => {
-  const query = 'SELECT * FROM prescription ORDER BY Id DESC LIMIT 5';
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).send('Internal Server Error');
-    } else {
-      res.json(results);
-    }
-  });
-});
-
-
-
-
-app.listen(8082, ()=>{
-    console.log("listening")
+app.listen(8081, () => {
+  console.log("listening")
 })

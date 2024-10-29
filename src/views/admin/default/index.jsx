@@ -1,6 +1,6 @@
 import MiniCalendar from "components/calendar/MiniCalendar";
-import WeeklyRevenue from "views/admin/default/components/WeeklyRevenue";
-import TotalSpent from "views/admin/default/components/TotalSpent";
+import Clothing from "views/admin/default/components/Clothing";
+import ShoesTable from "views/admin/default/components/ShoesTable";
 import PieChartCard from "views/admin/default/components/PieChartCard";
 import { IoMdHome } from "react-icons/io";
 import { IoDocuments } from "react-icons/io5";
@@ -24,6 +24,15 @@ import {
 } from 'firebase/auth'
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import BlazerTable from "./components/Tech_Accessories";
+import Headphone from "./components/Cosmetics";
+import Jacket from "./components/Activewear";
+import SmartPhone from "./components/Kids_Fashion_Table";
+import Kids_Fashion_Table from "./components/Kids_Fashion_Table";
+import Activewear from "./components/Activewear";
+import Tech_Accessories from "./components/Tech_Accessories";
+import Cosmetics from "./components/Cosmetics";
+import { setActive } from "@material-tailwind/react/components/Tabs/TabsContext";
 
 
 const Dashboard = () => {
@@ -31,6 +40,7 @@ const Dashboard = () => {
   let navigate = useNavigate()
   let auth = getAuth();
   let [photo, setPhoto] = useState('')
+
   // login verified check for google
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -53,49 +63,175 @@ const Dashboard = () => {
 
 
 
-  const [totalCount, setTotalCount] = useState(0);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('http://localhost:8082/countMedicine');
-        setTotalCount(response.data.count);
-      } catch (error) {
-        console.error('Error fetching count:', error);
-      }
-    };
+ 
 
-    fetchData();
+
+
+  const [Cloth, setCloh] = useState('Clothing');
+  const [countCloth, setCountCloth] = useState(null);
+
+  const [Shoes, setShoes] = useState('Shoes');
+  const [countShoes, setCountShoes] = useState(0);
+
+  const [KidsFashion, setKidsFashion] = useState('Kids Fashion');
+  const [countKidsFashion, setCountKidsFashion] = useState(0);
+
+  const [ActivewearPro, setcActivewearPro] = useState('Activewear');
+  const [countActivewearPro, setCountActivewearPro] = useState(0);
+
+  
+  const [CosmeticsPro, setcCosmeticsPro] = useState('Cosmetics');
+  const [countCosmeticsPro, setCountCosmeticsPro] = useState(0);
+
+  const [Tech_AccessoriesPro	, setTech_AccessoriesPro] = useState('Tech Accessories');
+  const [countTech_AccessoriesPro, setCountTech_AccessoriesPro] = useState(0);
+
+
+ 
+  //  used foir count of product 1
+
+
+    const ClothingProductCount = async () => {
+        try {
+            const response = await fetch(`http://localhost:8081/api/products/count/${Cloth}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            setCountCloth(data.count);
+           
+        } catch (err) {
+          setCountCloth(null);
+        }
+    };
+     useEffect(() => {
+      ClothingProductCount();
   }, []);
 
-  const [totalCountP, setTotalCountP] = useState(0);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('http://localhost:8082/countPrescription');
-        setTotalCountP(response.data.count);
-      } catch (error) {
-        console.error('Error fetching count:', error);
-      }
-    };
+  const ShoesProductCount = async () => {
+    try {
+        const response = await fetch(`http://localhost:8081/api/products/count/${Shoes}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setCountShoes(data.count);
+       
+    } catch (err) {
+      // setCountCloth(null);
+    }
+};
+ useEffect(() => {
+  ShoesProductCount();
+}, []);
 
-    fetchData();
-  }, []);
+const KidsFashionProductCount = async () => {
+  try {
+      const response = await fetch(`http://localhost:8081/api/products/count/${KidsFashion}`);
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setCountKidsFashion(data.count);
+     
+  } catch (err) {
+    setKidsFashion(null);
+  }
+};
+useEffect(() => {
+  KidsFashionProductCount();
+}, []);
+
+const ActivewearProductCount = async () => {
+  try {
+      const response = await fetch(`http://localhost:8081/api/products/count/${ActivewearPro}`);
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setCountActivewearPro(data.count);
+     
+  } catch (err) {
+    setcActivewearPro(null);
+  }
+};
+useEffect(() => {
+  ActivewearProductCount();
+}, []);
+
+const CosmeticsProductCount = async () => {
+  try {
+      const response = await fetch(`http://localhost:8081/api/products/count/${CosmeticsPro}`);
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setCountCosmeticsPro(data.count);
+     
+  } catch (err) {
+    setcCosmeticsPro(null);
+  }
+};
+useEffect(() => {
+  CosmeticsProductCount();
+}, []);
+
+const Tech_AccessoriesProProductCount = async () => {
+  try {
+      const response = await fetch(`http://localhost:8081/api/products/count/${Tech_AccessoriesPro}`);
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setCountTech_AccessoriesPro(data.count);
+     
+  } catch (err) {
+    setTech_AccessoriesPro(null);
+  }
+};
+useEffect(() => {
+  Tech_AccessoriesProProductCount();
+}, []);
+
+
+  
 
 
   return (
     <div>
       {/* Card widget */}
 
-      <div className="mt-3 gap-10 grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 3xl:grid-cols-6">
+      <div className="mt-3 gap-4 grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-3 3xl:grid-cols-6">
         <Widget
-          icon={<MdBarChart className="h-7 w-7" />}
-          title={"Total Medicine"}
-          subtitle={totalCount}
+          icon={<MdBarChart className="h-6 w-6" />}
+          title={"Clothing"}
+          subtitle={countCloth}
         />
         <Widget
           icon={<IoDocuments className="h-6 w-6" />}
-          title={"Total  Prescription"}
-          subtitle={totalCountP}
+          title={"Kids Fashion"}
+          subtitle={countKidsFashion}
+        />
+        <Widget
+          icon={<IoDocuments className="h-6 w-6" />}
+          title={"Shoes"}
+          subtitle={countShoes}
+        />
+        <Widget
+          icon={<IoDocuments className="h-6 w-6" />}
+          title={"Tech Accessories"}
+          subtitle={countTech_AccessoriesPro}
+        />
+        <Widget
+          icon={<IoDocuments className="h-6 w-6" />}
+          title={"Activewear"}
+          subtitle={countActivewearPro}
+        />
+   
+        <Widget
+          icon={<IoDocuments className="h-6 w-6" />}
+          title={"Cosmetics"}
+          subtitle={countCosmeticsPro}
         />
        
        
@@ -145,11 +281,15 @@ const Dashboard = () => {
 
 
 
-      {/* Charts */}
+      {/* Charts */}.
 
       <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-        <TotalSpent />
-        <WeeklyRevenue />
+        <Clothing />
+        <Kids_Fashion_Table />
+        <ShoesTable></ShoesTable>
+        <Activewear></Activewear>
+        <Tech_Accessories></Tech_Accessories>
+        <Cosmetics></Cosmetics>
       </div>
 
       {/* Tables & Charts */}
